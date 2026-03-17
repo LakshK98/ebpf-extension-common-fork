@@ -1,0 +1,52 @@
+# Copyright (c) eBPF for Windows contributors
+# SPDX-License-Identifier: MIT
+
+# This is the top-level workflow that runs on each pull request and push to main.
+# It invokes other jobs to perform builds and run tests.
+
+name: CI/CD
+
+on:
+  # Run on a daily schedule to perform the full set of tests.
+  schedule:
+    - cron: '00 8 * * *'
+  # Run on pull request to validate code changes.
+  pull_request:
+  merge_group:
+  # Permit manual runs of the workflow.
+  workflow_dispatch:
+  # Run on push so we can capture the baseline code coverage.
+  push:
+    branches: [ main ]
+
+concurrency:
+  # Cancel any in-progress instance of this workflow (CI/CD) for the same PR.
+  # Allow running concurrently with any commits on any other branch.
+  group: cicd-${{ github.event.schedule || github.event.pull_request.number || github.event.after || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: read
+  issues: write
+
+jobs:
+  # Perform the regular build.
+  regular:
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      ref: ${{ github.ref }}
+      build_artifact: Build-x64
+      configurations: '["Debug", "Release"]'
+
+  # Run the unit tests.
+  unit_tests:
+    needs: regular
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      name: ebpf_ext_rundown_test
+      test_command: .\ebpf_ext_rundown_test.exe -d yes
+      build_artifact: Build-x64
+      environment: windows-2022
+      gather_dumps: true
+      configurations: '["Debug", "Release"]'

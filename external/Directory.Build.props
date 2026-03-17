@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright (c) Microsoft Corporation
+  SPDX-License-Identifier: MIT
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="Platform">
+  <PropertyGroup>
+    <WdkContentRoot Condition="'$(WdkContentRoot)' == ''">$(MSBuildThisFileDirectory)..\packages\Microsoft.Windows.WDK.x64.10.0.26100.4204\c</WdkContentRoot>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <TreatWarningAsError>false</TreatWarningAsError>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

@@ -1,0 +1,130 @@
+# Copyright (c) eBPF for Windows contributors
+# SPDX-License-Identifier: MIT
+
+# This workflow performs a build of the project and uploads the result as a build artifact.
+
+name: Reusable MSBuild Workflow
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+      build_artifact:
+        required: true
+        type: string
+      configurations:
+        required: false
+        type: string
+        default: '["Debug", "Release"]'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    timeout-minutes: 90
+
+    strategy:
+      matrix:
+        configurations: ${{ fromJSON(inputs.configurations) }}
+    runs-on: windows-2022
+    env:
+      SOLUTION_FILE_PATH: ebpf_extension_common.sln
+      BUILD_ARTIFACT_NAME: ${{ inputs.build_artifact }}
+      BUILD_CONFIGURATION: ${{ matrix.configurations }}
+      BUILD_PLATFORM: x64
+
+    steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@v2
+      with:
+        egress-policy: audit
+
+    - id: skip_check
+      uses: fkirc/skip-duplicate-actions@v5
+      with:
+        cancel_others: 'false'
+        paths_ignore: '["**.md", "**/docs/**"]'
+
+    - name: Set MSVC Environment Variables
+      if: steps.skip_check.outputs.should_skip != 'true'
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        powershell.exe "echo 'msvc_tools_path=%VCToolsInstallDir%' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append"
+        powershell.exe "echo 'msvc_tools_version=%VCToolsVersion%' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append"
+
+    - uses: actions/checkout@v4
+      if: steps.skip_check.outputs.should_skip != 'true'
+      with:
+        repository: ${{ github.repository }}
+        submodules: 'recursive'
+        ref: ${{ inputs.ref }}
+
+    - name: Configure Windows Error Reporting to make a local copy of any crashes that occur.
+      id: configure_windows_error_reporting
+      if: steps.skip_check.outputs.should_skip != 'true'
+      run: |
+        mkdir c:/dumps/${{ env.BUILD_PLATFORM }}/${{ env.BUILD_CONFIGURATION }}
+        New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -ErrorAction SilentlyContinue
+        New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpType" -Value 2 -PropertyType DWord -ErrorAction SilentlyContinue
+        New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "c:\dumps\${{ env.BUILD_PLATFORM }}\${{ env.BUILD_CONFIGURATION }}" -PropertyType ExpandString -ErrorAction SilentlyContinue
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: x64
+
+    - name: Generate Catch2 build files
+      if: steps.skip_check.outputs.should_skip != 'true'
+      run: |
+        cmake -G "Visual Studio 17 2022" -S external\Catch2 -B external\Catch2\build -DBUILD_TESTING=OFF
+
+    - name: Cache nuget packages
+      if: steps.skip_check.outputs.should_skip != 'true'
+      uses: actions/cache@v4
+      env:
+        cache-name: cache-nuget-modules
+      with:
+        path: packages
+        key: ${{ runner.os }}-${{ env.BUILD_PLATFORM }}-${{ env.BUILD_CONFIGURATION }}-${{ env.BUILD_ARTIFACT_NAME }}-${{ hashFiles('**/packages.config') }}-${{ env.msvc_tools_version }}
+
+    - name: NuGet Restore
+      if: steps.skip_check.outputs.should_skip != 'true'
+      run: |
+        nuget restore packages.config -PackagesDirectory packages
+
+    - name: Build
+      if: steps.skip_check.outputs.should_skip != 'true'
+      run: |
+        msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform=${{ env.BUILD_PLATFORM }} ${{ env.SOLUTION_FILE_PATH }}
+
+    - name: Zip Build Output
+      if: always() && (steps.skip_check.outputs.should_skip != 'true')
+      run: |
+        Compress-Archive -Path ${{ env.BUILD_PLATFORM }}\${{ env.BUILD_CONFIGURATION }} -DestinationPath .\build-${{ matrix.configurations }}.zip
+
+    - name: Upload Build Output
+      if: always() && (steps.skip_check.outputs.should_skip != 'true')
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.build_artifact }}-${{ matrix.configurations }}
+        path: ${{ github.workspace }}/build-${{ matrix.configurations }}.zip
+        retention-days: 5
+
+    - name: Check for crash dumps
+      if: (success() || failure()) && (steps.skip_check.outputs.should_skip != 'true')
+      uses: andstor/file-existence-action@v3
+      id: check_dumps
+      with:
+        files: c:/dumps/${{ env.BUILD_PLATFORM }}/${{ env.BUILD_CONFIGURATION }}/*.dmp
+
+    - name: Upload any crash dumps
+      if: (success() || failure()) && (steps.skip_check.outputs.should_skip != 'true') && (steps.check_dumps.outputs.files_exists == 'true')
+      uses: actions/upload-artifact@v4
+      with:
+        name: Crash-Dumps-Build-${{ env.BUILD_PLATFORM }}-${{ env.BUILD_CONFIGURATION }}
+        path: c:/dumps/${{ env.BUILD_PLATFORM }}/${{ env.BUILD_CONFIGURATION }}
+        retention-days: 5
