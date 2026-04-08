@@ -117,9 +117,15 @@
       <CompileAs Condition="'$(Configuration)'=='FuzzerDebug'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)'=='Release'">CompileAsC</CompileAs>
     </ClCompile>
+    <ClCompile Include="..\src\ebpf_ext_tracelog.c">
+      <CompileAs Condition="'$(Configuration)'=='Debug'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)'=='FuzzerDebug'">CompileAsC</CompileAs>
+      <CompileAs Condition="'$(Configuration)'=='Release'">CompileAsC</CompileAs>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ebpf_ext_rundown.h" />
+    <ClInclude Include="..\include\ebpf_ext_tracelog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
