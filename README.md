@@ -21,6 +21,12 @@ The first module extracted is **rundown protection**, which wraps the Windows `E
 | `ebpf_ext_enter_rundown` | Acquire rundown protection (returns `false` if rundown already occurred) |
 | `ebpf_ext_leave_rundown` | Release previously acquired rundown protection |
 
+### Trace Logging
+
+The library includes a structured ETW trace logging framework built on `TraceLoggingProvider.h`. It provides a set of macros for emitting diagnostics at various levels (log, verbose, info, warning, error) with support for extension-specific keywords.
+
+See [docs/tracing.md](docs/tracing.md) for the design rationale, macro reference, and a step-by-step guide for adding new keywords.
+
 ## Prerequisites
 
 - **Visual Studio 2022** (v143 toolset)

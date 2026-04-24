@@ -8,19 +8,6 @@
 #include <TraceLoggingProvider.h>
 #include <winmeta.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-    TRACELOGGING_DECLARE_PROVIDER(ebpf_ext_tracelog_provider);
-
-    NTSTATUS
-    ebpf_ext_trace_initiate();
-
-    void
-    ebpf_ext_trace_terminate();
-
 // Event name macros.
 #define EBPF_EXT_TRACELOG_EVENT_SUCCESS "EbpfExtSuccess"
 #define EBPF_EXT_TRACELOG_EVENT_RETURN "EbpfExtReturn"
@@ -29,6 +16,11 @@ extern "C"
 #define EBPF_EXT_TRACELOG_EVENT_API_ERROR "EbpfExtApiError"
 
 // Keyword bit masks for TraceLoggingProviderEnabled checks.
+// Common keywords (bits 0x1-0x4) are reserved by this library.
+// Extension-specific keywords use bits 0x8 and above.
+// To add a new extension keyword, add a #define here, a corresponding enum entry
+// in ebpf_ext_tracelog_keyword_t, and switch cases in ebpf_ext_tracelog.c.
+// See docs/tracing.md for details.
 #define EBPF_EXT_TRACELOG_KEYWORD_FUNCTION_ENTRY_EXIT 0x1
 #define EBPF_EXT_TRACELOG_KEYWORD_BASE 0x2
 #define EBPF_EXT_TRACELOG_KEYWORD_EXTENSION 0x4
@@ -46,6 +38,19 @@ extern "C"
 #define EBPF_EXT_TRACELOG_LEVEL_WARNING WINEVENT_LEVEL_WARNING
 #define EBPF_EXT_TRACELOG_LEVEL_INFO WINEVENT_LEVEL_INFO
 #define EBPF_EXT_TRACELOG_LEVEL_VERBOSE WINEVENT_LEVEL_VERBOSE
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+    TRACELOGGING_DECLARE_PROVIDER(ebpf_ext_tracelog_provider);
+
+    NTSTATUS
+    ebpf_ext_trace_initiate();
+
+    void
+    ebpf_ext_trace_terminate();
 
     // Keyword enum for function dispatch.
     typedef enum _ebpf_ext_tracelog_keyword

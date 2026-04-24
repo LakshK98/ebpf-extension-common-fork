@@ -8,6 +8,8 @@
 //       ebpf_ext_tracelog_provider,
 //       "MyExtProvider",
 //       (0x..., 0x..., 0x..., 0x.., 0x.., 0x.., 0x.., 0x.., 0x.., 0x.., 0x..));
+//
+// See docs/tracing.md for full setup guidance and how to add new keywords.
 
 #include "ebpf_ext_tracelog.h"
 
