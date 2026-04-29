@@ -132,9 +132,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ebpf_ext_rundown.c" />
+    <ClCompile Include="..\src\ebpf_ext_tracelog.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ebpf_ext_rundown.h" />
+    <ClInclude Include="..\include\ebpf_ext_tracelog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
