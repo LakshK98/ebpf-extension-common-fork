@@ -65,7 +65,7 @@ void DriverUnload(...)
 ## Adding a new extension keyword
 
 When a consuming extension needs a new keyword for filtering its trace events,
-update these three files in this repository:
+update these two files in this repository:
 
 ### 1. `include/ebpf_ext_tracelog.h`
 
