@@ -15,7 +15,8 @@
     <WDKVersion Condition="'$(WDKVersion)' == '' and '$(VisualStudioVersion)' == '17.0'">10.0.26100.4204</WDKVersion>
     <!-- Platform toolset -->
     <EbpfExtPlatformToolset Condition="'$(VisualStudioVersion)' == '18.0'">v145</EbpfExtPlatformToolset>
-    <EbpfExtPlatformToolset Condition="'$(VisualStudioVersion)' == '17.0'">v143</EbpfExtPlatformToolset>
+    <EbpfExtPlatformToolset Condition="'$(EbpfExtPlatformToolset)' == '' and '$(VisualStudioVersion)' == '17.0'">v143</EbpfExtPlatformToolset>
+    <EbpfExtPlatformToolset Condition="'$(EbpfExtPlatformToolset)' == ''">v143</EbpfExtPlatformToolset>
   </PropertyGroup>
 
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.SDK.CPP.$(WDKVersion)\build\native\Microsoft.Windows.SDK.cpp.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.SDK.CPP.$(WDKVersion)\build\native\Microsoft.Windows.SDK.cpp.props')" />
