@@ -43,8 +43,12 @@ cd ebpf-extension-common
 
 ### 2. Generate Catch2 build files
 
+Catch2 must be built with the static C runtime (`/MT`, `/MTd`) so it matches the
+rest of the repo (see `RuntimeLibrary` in `Directory.Build.props`). Otherwise the
+test executable fails to link with an `LNK2038` `RuntimeLibrary` mismatch.
+
 ```bash
-cmake -G "Visual Studio 17 2022" -S external\Catch2 -B external\Catch2\build -DBUILD_TESTING=OFF
+cmake -G "Visual Studio 17 2022" -S external\Catch2 -B external\Catch2\build -DBUILD_TESTING=OFF "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>"
 ```
 
 ### 3. Restore NuGet packages
