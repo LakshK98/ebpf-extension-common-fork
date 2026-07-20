@@ -4,7 +4,10 @@
     "config:recommended",
     "helpers:pinGitHubActionDigests"
   ],
-  "schedule": ["on saturday"],
+  "schedule": ["on tuesday"],
+  "git-submodules": {
+    "enabled": true
+  },
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
@@ -12,7 +15,7 @@
     },
     {
       "matchManagers": ["git-submodules"],
-      "matchPaths": [
+      "matchDepNames": [
         "external/usersim",
         "external/Catch2"
       ],
