@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "schedule": ["on saturday"],
+  "packageRules": [
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    },
+    {
+      "matchManagers": ["git-submodules"],
+      "matchPaths": [
+        "external/usersim",
+        "external/Catch2"
+      ],
+      "groupName": "git-submodules"
+    }
+  ]
+}
